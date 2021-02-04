@@ -41,7 +41,7 @@ module.exports = merge(common, {
             WEBGL_RENDERER: JSON.stringify(true)
         }),
         new HtmlWebpackPlugin({
-            template: path.resolve(__dirname, "index.html"),
+            template: path.resolve(__dirname, "src", "index.html"),
             inject: "body"
         })
     ],
