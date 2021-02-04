@@ -24,6 +24,8 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+      - name: Clean up previous builds
+        run: git rm -r dist
       - name: Get release version
         run: |
           echo "app_version=$(node get-version.js)" >> $GITHUB_ENV
