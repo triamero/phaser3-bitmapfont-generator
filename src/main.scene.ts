@@ -1,5 +1,7 @@
 import * as Phaser from "phaser";
 import {GenerateEvent} from "./generate.event";
+import {Utf8} from "./utf8";
+
 let js2xmlparser = require("js2xmlparser");
 
 export class MainScene extends Phaser.Scene {
@@ -9,27 +11,62 @@ export class MainScene extends Phaser.Scene {
     // noinspection JSUnusedGlobalSymbols
     create() {
         this.game.events.on("generate", this._onGenerateAsync, this);
+        this.game.events.emit("generator-ready");
     }
 
     private async _onGenerateAsync(ev: GenerateEvent): Promise<void> {
-        // Generate Font
-        const fontFamily = ev.fontFamily;
-        const fontSize = parseInt(ev.fontSize);
-        const fontColor = ev.fontColor;
+
+        console.log(ev);
+
+        if (!ev.fontSize || !ev.fontFamily || !ev.fontColor || !ev.symbols) {
+            return;
+        }
 
         this._chars.forEach(x => x.destroy(true));
         this._chars.length = 0;
         let allChars = [...ev.symbols];
 
+        let sizes = await this._prepareCanvasAsync(ev.fontFamily, ev.fontSize, ev.fontColor, ev.monospaced, allChars);
+
+        this.game.scale.resize(sizes.canvasWidth, sizes.canvasHeight);
+
+        let xmlString = this._getXmlAsBase64(this._chars, ev.fontFamily, ev.fontSize, sizes.maxHeight);
+
+        await this._emitResultAsync(ev.fontFamily, ev.fontSize, xmlString);
+    }
+
+    private async _emitResultAsync(fontFamily: string, fontSize: string, xml: string): Promise<void> {
+
+        let png = await new Promise(resolve => {
+            this.game.renderer.snapshot((snapshot: Phaser.Display.Color | HTMLImageElement) => {
+                resolve((snapshot as HTMLImageElement).src);
+            });
+        });
+
+        let result = {
+            pngFileName: `${fontFamily}-${fontSize}.png`,
+            xmlFileName: `${fontFamily}-${fontSize}.xml`,
+            png: png,
+            xml: `data:text/xml;base64,${xml}`
+        };
+
+        this.game.events.emit("result", result);
+    }
+
+    private async _prepareCanvasAsync(fontFamily: string, fontSize: string, fontColor: string, monospaced: boolean, chars: string[]): Promise<{ maxHeight: number, canvasWidth: number, canvasHeight: number }> {
         let maxWidths: number[] = [];
         let maxHeights: number[] = [];
 
-        let style = {fontSize: fontSize, fontFamily: fontFamily, color: fontColor};
-        allChars.forEach((c, i) => {
-            let text = this._chars[i] = this.add.text(0, 0, c, style);
-            maxWidths.push(text.width);
-            maxHeights.push(text.height);
-        });
+        let style = {fontSize: +fontSize, fontFamily: fontFamily, color: fontColor};
+
+        for (let i = 0; i < chars.length; i++) {
+            await new Promise(resolve => {
+                let text = this._chars[i] = this.add.text(0, 0, chars[i], style);
+                maxWidths.push(text.displayWidth);
+                maxHeights.push(text.displayHeight);
+                resolve();
+            });
+        }
 
         let maxWidth = Math.max(...maxWidths);
         let maxHeight = Math.max(...maxHeights);
@@ -39,95 +76,17 @@ export class MainScene extends Phaser.Scene {
         Phaser.Actions.GridAlign(this._chars, {
             width: gridWidth,
             cellWidth: maxWidth,
-            cellHeight: maxHeight,
+            cellHeight: maxHeight + 4,
             position: Phaser.Display.Align.TOP_LEFT,
             x: maxWidth / 2,
             y: maxHeight / 2
         });
 
-        if (ev.monospaced) {
+        if (monospaced) {
             this._chars.forEach((obj) => {
                 obj.x = obj.x + (maxWidth / 2) - (obj.width / 2);
             });
         }
-
-        const charDataArr = this._chars.map(obj => {
-            return {
-                "@": {
-                    "id": obj.text.charCodeAt(0),
-                    "char": obj.text,
-                    "x": obj.x,
-                    "y": obj.y,
-                    "width": obj.width,
-                    "height": obj.height,
-                    "xoffset": "0",
-                    "yoffset": maxHeight - obj.height,
-                    "xadvance": obj.width,
-                    "page": "0",
-                    "chnl": "15"
-                }
-            }
-        });
-
-        const xmlString = js2xmlparser.parse(
-            "font",
-            {
-                "info": {
-                    "@": {
-                        "face": fontFamily,
-                        "size": fontSize,
-                        "bold": "0",
-                        "italic": "0",
-                        "charset": "",
-                        "unicode": "1",
-                        "stretchH": "100",
-                        "smooth": "0",
-                        "aa": "1",
-                        "padding": "0,0,0,0",
-                        "spacing": "0,0",
-                        "outline": "0"
-                    }
-                },
-                "common": {
-                    "@": {
-                        "lineHeight": maxHeight,
-                        "base": maxHeight,
-                        "scaleW": "512",
-                        "scaleH": "512",
-                        "pages": "1",
-                        "packed": "0",
-                        "alphaChnl": "0",
-                        "redChnl": "4",
-                        "greenChnl": "4",
-                        "blueChnl": "4"
-                    }
-                },
-                "pages": {
-                    "pages": {
-                        "@": {
-                            "id": "0",
-                            "file": "font.png",
-                        }
-                    }
-                },
-                "chars": {
-                    "@": {
-                        "count": charDataArr.length
-                    },
-                    "char": charDataArr
-                }
-            },
-            {
-                format: {
-                    doubleQuotes: true
-                }
-            });
-
-        let png = document.querySelector("#download-png") as HTMLLinkElement;
-        let xml = document.querySelector("#download-xml") as HTMLLinkElement;
-
-        (<any>png).download = `${fontFamily}-${fontSize}.png`;
-        (<any>xml).download = `${fontFamily}-${fontSize}.xml`;
 
         let widths: number[] = [];
         let heights: number[] = [];
@@ -140,21 +99,97 @@ export class MainScene extends Phaser.Scene {
         let width = Math.ceil(Math.max(...widths));
         let height = Math.ceil(Math.max(...heights));
 
-        this.game.scale.resize(width, height);
-
-        this.game.renderer.snapshot((snapshot: Phaser.Display.Color | HTMLImageElement) => {
-            png.href = (snapshot as HTMLImageElement).src;
-        });
-
-        xml.href = `data:text/xml;base64,${btoa(this._toBinary(xmlString))}`;
+        return {
+            maxHeight: maxHeight,
+            canvasHeight: height,
+            canvasWidth: width
+        };
     }
 
-
-    private _toBinary(str: string) {
-        const codeUnits = new Uint16Array(str.length);
+    private _toBase64(str: string): string {
+        let codeUnits = new Uint16Array(str.length);
         for (let i = 0; i < codeUnits.length; i++) {
             codeUnits[i] = str.charCodeAt(i);
         }
-        return String.fromCharCode(...new Uint8Array(codeUnits.buffer));
+
+        let base64 = btoa(String.fromCharCode(...new Uint8Array(codeUnits.buffer)));
+
+        return Utf8.decode(Utf8.encode(base64));
+    }
+
+    private _getXmlAsBase64(chars: Phaser.GameObjects.Text[], fontFamily: string, fontSize: string, maxHeight: number) {
+        let charDataArr = chars.map(obj => {
+            return {
+                "@": {
+                    "id": obj.text.charCodeAt(0),
+                    "letter": obj.text === " " ? "space" : obj.text,
+                    "x": obj.x,
+                    "y": obj.y,
+                    "width": obj.displayWidth,
+                    "height": obj.displayHeight + 4,
+                    "xoffset": "0",
+                    "yoffset": maxHeight - obj.displayHeight,
+                    "xadvance": obj.displayWidth,
+                    "page": "0",
+                    "chnl": "15"
+                }
+            }
+        });
+
+        let xml = {
+            "info": {
+                "@": {
+                    "face": fontFamily,
+                    "size": fontSize,
+                    "bold": "0",
+                    "italic": "0",
+                    "charset": "",
+                    "unicode": "1",
+                    "stretchH": "100",
+                    "smooth": "0",
+                    "aa": "1",
+                    "padding": "0,0,0,0",
+                    "spacing": "0,0",
+                    "outline": "0"
+                }
+            },
+            "common": {
+                "@": {
+                    "lineHeight": maxHeight,
+                    "base": maxHeight,
+                    "scaleW": "512",
+                    "scaleH": "512",
+                    "pages": "1",
+                    "packed": "0"
+                }
+            },
+            "pages": {
+                "page": {
+                    "@": {
+                        "id": "0",
+                        "file": "font.png",
+                    }
+                }
+            },
+            "chars": {
+                "@": {
+                    "count": charDataArr.length
+                },
+                "char": charDataArr
+            }
+        };
+
+        let options = {
+            format: {
+                doubleQuotes: true,
+            },
+            declaration: {
+                encoding: "UTF-8"
+            }
+        };
+
+        let xmlString = js2xmlparser.parse("font", xml, options);
+
+        return this._toBase64(xmlString);
     }
 }

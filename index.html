@@ -1,4 +1,4 @@
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
@@ -31,10 +31,39 @@
             font-weight: 100;
         }
 
+        .lds-dual-ring {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+        }
+
+        .lds-dual-ring:after {
+            content: " ";
+            display: block;
+            width: 64px;
+            height: 64px;
+            margin: 8px;
+            border-radius: 50%;
+            border: 6px solid #fff;
+            border-color: #fff transparent #fff transparent;
+            animation: lds-dual-ring 1.2s linear infinite;
+        }
+
+        @keyframes lds-dual-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+
     </style>
 </head>
 
 <body>
+<div style="font-family: Roboto; position: absolute; visibility: hidden">.</div>
 <nav class="navbar navbar-light bg-light">
     <div class="container">
         <h1 class="navbar-brand">
@@ -55,34 +84,43 @@
 <div class="container">
 
     <p style="font-size: 18px">
-        Choose (you may upload file or enter url) font, select font size and color. Then download image (.png), map
+        Choose (you may upload file) font, select font size and color. Then download image (.png), map
         (.xml) and you're breathtaking!
     </p>
     <p style="font-size: 18px">
         <b>Privacy notice</b>: data won't be transferred to servers.
     </p>
 
+    <div style="position: absolute" class="lds-dual-ring"></div>
+
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="form-group">
                 <label for="fontFamily">Font</label>
-                <select id="fontFamily" class="form-control mr-sm-4">
-                    <option selected>Roboto</option>
-                    <option>Arial</option>
-                </select>
+                <div class="input-group">
+                    <select id="fontFamily" class="custom-select">
+                        <option value="Roboto">Roboto</option>
+                        <option value="Arial">Arial</option>
+                    </select>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('fontInput').click()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                <path d="M24 10h-10v-10h-4v10h-10v4h10v10h4v-10h10z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <input id="fontInput" type="file" style="display: none" accept=".ttf, .woff, .woff2">
             </div>
 
             <div class="form-group">
                 <label for="fontSize">Size</label>
-                <input type="number" id="fontSize" class="form-control" value="72">
+                <input type="number" id="fontSize" class="form-control">
             </div>
 
             <div class="form-group">
                 <label for="fontColor">Color</label>
-                <select id="fontColor" class="form-control">
-                    <option value="#000000" selected>#000000</option>
-                    <option value="#ffffff">#ffffff</option>
-                </select>
+                <input type="color" id="fontColor" class="form-control">
             </div>
 
             <div class="form-group">
@@ -95,16 +133,18 @@
                 <label class="form-check-label" for="monospaced">Monospaced</label>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-8">
+
             <div class="card">
                 <div class="card-header">
-                    <div class="form-group">
-                        <label for="download-png">Download</label>
-                        <div>
-                            <a id="download-png" class="btn btn-primary">.png</a>
-                            <a id="download-xml" class="btn btn-primary">.xml</a>
-                        </div>
-                    </div>
+                    <ul class="nav nav-pills card-header-pills">
+                        <li class="nav-item" style="margin: 0 5px 0 5px">
+                            <a id="download-png" class="nav-link active">.png</a>
+                        </li>
+                        <li class="nav-item" style="margin: 0 5px 0 5px">
+                            <a id="download-xml" class="nav-link active">.xml</a>
+                        </li>
+                    </ul>
                 </div>
                 <div class="card-body" style="padding: 0">
                     <div id="root"></div>
