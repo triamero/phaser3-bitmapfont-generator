@@ -61,6 +61,7 @@ export class MainScene extends Phaser.Scene {
 
         for (let i = 0; i < chars.length; i++) {
             await new Promise(resolve => {
+                // @ts-ignore
                 let text = this._chars[i] = this.add.text(0, 0, chars[i], style);
                 maxWidths.push(text.displayWidth);
                 maxHeights.push(text.displayHeight);
