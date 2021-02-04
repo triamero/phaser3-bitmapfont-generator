@@ -26,7 +26,7 @@ jobs:
           git config --local user.name "GitHub Action"
       - name: Get release version
         run: |
-          echo "app_version=${{ node get-version.js }}" >> $GITHUB_ENV
+          echo "app_version=$(node get-version.js)" >> $GITHUB_ENV
           echo "${{ env.app_version }}"
       - name: Install dependencies
         run: npm install
