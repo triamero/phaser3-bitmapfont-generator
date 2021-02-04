@@ -20,7 +20,7 @@ module.exports = merge(common, {
 
     plugins: [
         new HtmlPlugin({
-            template: path.resolve(__dirname, "index.html"),
+            template: path.resolve(__dirname, "src", "index.html"),
             inject: "body",
         })
     ]
