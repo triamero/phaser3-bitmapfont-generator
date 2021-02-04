@@ -26,8 +26,8 @@ jobs:
           git config --local user.name "GitHub Action"
       - name: Get release version
         run: |
-          echo "::set-env name=app_version::`node get-version.js`"
-          echo ${app_version}
+          echo "app_version=`node get-version.js`" >> $GITHUB_ENV
+          echo ${env.app_version}
       - name: Install dependencies
         run: npm install
       - name: Build
@@ -36,8 +36,8 @@ jobs:
         run: |
           git add dist/*
           if ! git diff-index --quiet HEAD --; then
-            git commit -m "Release version ${app_version}" -a
-            git tag ${app_version}
+            git commit -m "Release version ${env.app_version}" -a
+            git tag ${env.app_version}
           fi
       - name: Push
         uses: ad-m/github-push-action@v0.6.0
