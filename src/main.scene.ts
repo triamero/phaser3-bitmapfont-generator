@@ -1,6 +1,5 @@
 import * as Phaser from "phaser";
 import {GenerateEvent} from "./generate.event";
-import {Utf8} from "./utf8";
 
 let js2xmlparser = require("js2xmlparser");
 
@@ -47,7 +46,7 @@ export class MainScene extends Phaser.Scene {
             pngFileName: `${fontFamily}-${fontSize}.png`,
             xmlFileName: `${fontFamily}-${fontSize}.xml`,
             png: png,
-            xml: `data:text/xml;base64,${xml}`
+            xml: `data:text/xml;charset=utf-8;base64,${xml}`
         };
 
         this.game.events.emit("result", result);
@@ -112,14 +111,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     private _toBase64(str: string): string {
-        let codeUnits = new Uint16Array(str.length);
-        for (let i = 0; i < codeUnits.length; i++) {
-            codeUnits[i] = str.charCodeAt(i);
-        }
-
-        let base64 = btoa(String.fromCharCode(...new Uint8Array(codeUnits.buffer)));
-
-        return Utf8.decode(Utf8.encode(base64));
+        return new Buffer(str).toString("base64");
     }
 
     private _getXmlAsBase64(chars: Phaser.GameObjects.Text[], fontFamily: string, fontSize: string, maxHeight: number) {
