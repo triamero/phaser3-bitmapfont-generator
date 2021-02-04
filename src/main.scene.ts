@@ -59,8 +59,10 @@ export class MainScene extends Phaser.Scene {
 
         let style = {fontSize: +fontSize, fontFamily: fontFamily, color: fontColor};
 
+        let promises = [];
+
         for (let i = 0; i < chars.length; i++) {
-            await new Promise(resolve => {
+            promises[i] = new Promise(resolve => {
                 // @ts-ignore
                 let text = this._chars[i] = this.add.text(0, 0, chars[i], style);
                 maxWidths.push(text.displayWidth);
@@ -68,6 +70,8 @@ export class MainScene extends Phaser.Scene {
                 resolve();
             });
         }
+
+        await Promise.all(promises);
 
         let maxWidth = Math.max(...maxWidths);
         let maxHeight = Math.max(...maxHeights);

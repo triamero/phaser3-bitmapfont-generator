@@ -31,10 +31,24 @@
             font-weight: 100;
         }
 
+        #lds-wrapper {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(120,120,120, 0.6);
+            display: none;
+        }
+
         .lds-dual-ring {
             display: inline-block;
             width: 80px;
             height: 80px;
+            margin: auto;
         }
 
         .lds-dual-ring:after {
@@ -81,6 +95,9 @@
         </ul>
     </div>
 </nav>
+<div id="lds-wrapper">
+    <div class="lds-dual-ring"></div>
+</div>
 <div class="container">
 
     <p style="font-size: 18px">
@@ -91,7 +108,6 @@
         <b>Privacy notice</b>: data won't be transferred to servers.
     </p>
 
-    <div style="position: absolute" class="lds-dual-ring"></div>
 
     <div class="row">
         <div class="col-md-4">
@@ -103,7 +119,8 @@
                         <option value="Arial">Arial</option>
                     </select>
                     <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('fontInput').click()">
+                        <button class="btn btn-outline-secondary" type="button"
+                                onclick="document.getElementById('fontInput').click()">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
                                 <path d="M24 10h-10v-10h-4v10h-10v4h10v10h4v-10h10z"/>
                             </svg>

@@ -31,7 +31,17 @@ const colorKey = "bitmapfont-color";
 const symbolsKey = "bitmapfont-symbols";
 const monospacedKey = "bitmapfont-monospaced";
 
+const showSpinner = function () {
+    document.getElementById("lds-wrapper").style.display = "flex";
+}
+
+const hideSpinner = function () {
+    document.getElementById("lds-wrapper").style.display = "none";
+}
+
 window.onload = () => {
+
+    hideSpinner();
 
     let font = localStorage.getItem(fontKey) || "Arial";
     let size = localStorage.getItem(sizeKey) || "18";
@@ -122,19 +132,23 @@ window.onload = () => {
     let game = new GeneratorGame();
 
     let emit = () => {
-        game.events.emit("generate", {
-            fontFamily: ffElement.value,
-            fontSize: fsElement.value,
-            fontColor: fcElement.value,
-            symbols: sElement.value,
-            monospaced: mElement.checked
-        });
 
-        localStorage.setItem(fontKey, ffElement.value);
-        localStorage.setItem(sizeKey, fsElement.value.toString());
-        localStorage.setItem(colorKey, fcElement.value);
-        localStorage.setItem(symbolsKey, sElement.value);
-        localStorage.setItem(monospacedKey, mElement.checked.toString());
+        showSpinner();
+        setTimeout(() => {
+            game.events.emit("generate", {
+                fontFamily: ffElement.value,
+                fontSize: fsElement.value,
+                fontColor: fcElement.value,
+                symbols: sElement.value,
+                monospaced: mElement.checked
+            });
+
+            localStorage.setItem(fontKey, ffElement.value);
+            localStorage.setItem(sizeKey, fsElement.value.toString());
+            localStorage.setItem(colorKey, fcElement.value);
+            localStorage.setItem(symbolsKey, sElement.value);
+            localStorage.setItem(monospacedKey, mElement.checked.toString());
+        }, 50);
     };
 
     ffElement.onchange = emit;
@@ -146,6 +160,7 @@ window.onload = () => {
     game.events.on("generator-ready", () => emit());
 
     game.events.on("result", (result: any) => {
+        hideSpinner();
         let png = document.querySelector("#download-png") as HTMLLinkElement;
         let xml = document.querySelector("#download-xml") as HTMLLinkElement;
         (<any>png).download = result.pngFileName;
