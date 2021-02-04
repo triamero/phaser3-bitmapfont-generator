@@ -22,7 +22,7 @@ export class MainScene extends Phaser.Scene {
             return;
         }
 
-        this._chars.forEach(x => x.destroy(true));
+        this._chars.forEach(x => x.destroy());
         this._chars.length = 0;
         let allChars = [...ev.symbols];
 
