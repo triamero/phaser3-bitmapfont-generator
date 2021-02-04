@@ -34,7 +34,7 @@ jobs:
         run: npm run release --if-present
       - name: Commit changes
         run: |
-          git add dist/*
+          git add dist/* -f
           if ! git diff-index --quiet HEAD --; then
             git commit -m "Release version ${{ env.app_version }}" -a
             git tag ${{ env.app_version }}
