@@ -47,7 +47,7 @@ window.onload = () => {
     let size = localStorage.getItem(sizeKey) || "18";
     let color = localStorage.getItem(colorKey) || "#000000";
     let symbols = localStorage.getItem(symbolsKey) || defaultSymbols;
-    let monospaced = JSON.parse(localStorage.getItem(monospacedKey)) || true;
+    let monospaced = localStorage.getItem(monospacedKey) != null ? JSON.parse(localStorage.getItem(monospacedKey)) : true;
     let fonts = JSON.parse(localStorage.getItem(userFontsKey)) || {};
 
     let ffElement = (document.getElementById("fontFamily") as HTMLSelectElement);

@@ -13,7 +13,7 @@ module.exports = merge(common, {
         hot: true,
         watchContentBase: true,
         compress: false,
-        port: 4201
+        port: 4202
     },
 
     watchOptions: {
